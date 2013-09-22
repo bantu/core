@@ -105,19 +105,19 @@ class Scanner extends BasicEmitter {
 				$cacheData = $this->cache->get($file);
 				if ($cacheData) {
 					$this->permissionsCache->remove($cacheData['fileid']);
-				}
-				if ($reuseExisting and $cacheData) {
-					// only reuse data if the file hasn't explicitly changed
-					if (isset($data['mtime']) && isset($cacheData['mtime']) && $data['mtime'] === $cacheData['mtime']) {
-						if (($reuseExisting & self::REUSE_SIZE) && ($data['size'] === -1)) {
-							$data['size'] = $cacheData['size'];
+					if ($reuseExisting) {
+						// only reuse data if the file hasn't explicitly changed
+						if (isset($data['mtime']) && isset($cacheData['mtime']) && $data['mtime'] === $cacheData['mtime']) {
+							if (($reuseExisting & self::REUSE_SIZE) && ($data['size'] === -1)) {
+								$data['size'] = $cacheData['size'];
+							}
+							if ($reuseExisting & self::REUSE_ETAG) {
+								$data['etag'] = $cacheData['etag'];
+							}
 						}
-						if ($reuseExisting & self::REUSE_ETAG) {
-							$data['etag'] = $cacheData['etag'];
-						}
+						// Only update metadata that has changed
+						$newData = array_diff($data, $cacheData);
 					}
-					// Only update metadata that has changed
-					$newData = array_diff($data, $cacheData);
 				}
 				if (!empty($newData)) {
 					$this->cache->put($file, $newData);
