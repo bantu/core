@@ -104,6 +104,13 @@ class Scanner extends BasicEmitter {
 				$newData = $data;
 				$cacheData = $this->cache->get($file);
 				if ($cacheData) {
+					// prevent empty etag
+					$etag = $cacheData['etag'];
+					$propagateETagChange = false;
+					if (empty($etag)) {
+						$etag = $data['etag'];
+						$propagateETagChange = true;
+					}
 					$this->permissionsCache->remove($cacheData['fileid']);
 					if ($reuseExisting) {
 						// only reuse data if the file hasn't explicitly changed
@@ -113,6 +120,19 @@ class Scanner extends BasicEmitter {
 							}
 							if ($reuseExisting & self::REUSE_ETAG) {
 								$data['etag'] = $cacheData['etag'];
+								if ($propagateETagChange) {
+									$parent = $file;
+									while ($parent !== '') {
+										$parent = dirname($parent);
+										if ($parent === '.') {
+											$parent = '';
+										}
+										$parentCacheData = $this->cache->get($parent);
+										$this->cache->update($parentCacheData['fileid'], array(
+											'etag' => $this->storage->getETag($parent),
+										));
+									}
+								}
 							}
 						}
 						// Only update metadata that has changed
@@ -122,6 +142,8 @@ class Scanner extends BasicEmitter {
 				if (!empty($newData)) {
 					$this->cache->put($file, $newData);
 				}
+			} else {
+				$this->cache->remove($file);
 			}
 			return $data;
 		}
