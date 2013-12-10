@@ -101,6 +101,7 @@ class OC_DB {
 					);
 					$connectionParams['adapter'] = '\OC\DB\Adapter';
 					$connectionParams['wrapperClass'] = 'OC\DB\Connection';
+					$eventManager->addEventSubscriber(new \Doctrine\DBAL\Event\Listeners\MysqlSessionInit);
 					break;
 				case 'pgsql':
 					$connectionParams = array(
