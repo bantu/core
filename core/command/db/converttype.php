@@ -178,8 +178,8 @@ class ConvertType extends Command {
 		if (!empty($toTables)) {
 			$output->writeln('<info>Clearing schema in new database</info>');
 		}
-		foreach($toTables as $table) {
-			$schemaManager->dropTable($table);
+		foreach ($toTables as $table) {
+			$schemaManager->tryMethod('dropTable', $table);
 		}
 	}
 
