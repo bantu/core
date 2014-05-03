@@ -1279,6 +1279,23 @@
 			</field>
 		</index>
 
+		<index>
+			<unique>true</unique>
+			<name>user_app_key_index</name>
+			<field>
+				<name>user</name>
+				<sorting>ascending</sorting>
+			</field>
+			<field>
+				<name>app</name>
+				<sorting>ascending</sorting>
+			</field>
+			<field>
+				<name>key</name>
+				<sorting>ascending</sorting>
+			</field>
+		</index>
+
 		</declaration>
 
 	</table>
