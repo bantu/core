@@ -22,6 +22,14 @@ ADMINLOGIN=admin$EXECUTOR_NUMBER
 BASEDIR=$PWD
 
 DBCONFIGS="sqlite mysql pgsql oci"
+
+# $PHP_EXE is run through 'which' and as such e.g. 'php' or 'hhvm' is usually
+# sufficient. Due to the behaviour of 'which', $PHP_EXE may also be a path
+# (absolute or not), e.g. code/projects/php-src/sapi/cli/php.
+if [ -z "$PHP_EXE" ]; then
+	PHP_EXE=php
+fi
+PHP=$(which "$PHP_EXE")
 PHPUNIT=$(which phpunit)
 
 function print_syntax {
@@ -33,12 +41,19 @@ function print_syntax {
 	echo -e "\nIf no arguments are specified, all tests will be run with all database configs" >&2
 }
 
+if [ -x "$PHP" ]; then
+	echo "Using PHP executable $PHP"
+else
+	echo "Could not find PHP executable $PHP_EXE" >&2
+	exit 3
+fi
+
 if ! [ -x "$PHPUNIT" ]; then
 	echo "phpunit executable not found, please install phpunit version >= 3.7" >&2
 	exit 3
 fi
 
-PHPUNIT_VERSION=$("$PHPUNIT" --version | cut -d" " -f2)
+PHPUNIT_VERSION=$("$PHP" "$PHPUNIT" --version | cut -d" " -f2)
 PHPUNIT_MAJOR_VERSION=$(echo $PHPUNIT_VERSION | cut -d"." -f1)
 PHPUNIT_MINOR_VERSION=$(echo $PHPUNIT_VERSION | cut -d"." -f2)
 
@@ -143,13 +158,13 @@ function execute_tests {
 	cd tests
 	rm -rf "coverage-html-$1"
 	mkdir "coverage-html-$1"
-	php -f enable_all.php | grep -i -C9999 error && echo "Error during setup" && exit 101
+	"$PHP" -f enable_all.php | grep -i -C9999 error && echo "Error during setup" && exit 101
 	if [ -z "$NOCOVERAGE" ]; then
-		"$PHPUNIT" --configuration phpunit-autotest.xml --log-junit "autotest-results-$1.xml" --coverage-clover "autotest-clover-$1.xml" --coverage-html "coverage-html-$1" "$2" "$3"
+		"$PHP" "$PHPUNIT" --configuration phpunit-autotest.xml --log-junit "autotest-results-$1.xml" --coverage-clover "autotest-clover-$1.xml" --coverage-html "coverage-html-$1" "$2" "$3"
 		RESULT=$?
 	else
 		echo "No coverage"
-		"$PHPUNIT" --configuration phpunit-autotest.xml --log-junit "autotest-results-$1.xml" "$2" "$3"
+		"$PHP" "$PHPUNIT" --configuration phpunit-autotest.xml --log-junit "autotest-results-$1.xml" "$2" "$3"
 		RESULT=$?
 	fi
 }
